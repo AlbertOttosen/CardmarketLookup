@@ -7,12 +7,18 @@ import concurrent.futures
 def GetCardPrice(card):
 	cardname = card[1]
 	url = 'https://www.cardmarket.com/en/Magic/Cards/' + cardname
-	response = requests.get(url)
-	contents = response.text
-	soup = BeautifulSoup(contents, 'html.parser')
-	info = soup.find("div", "infoContainer")
+	info = None
+	attempts = 0
+	while info==None and attempts < 10:
+		response = requests.get(url)
+		contents = response.text
+		soup = BeautifulSoup(contents, 'html.parser')
+		info = soup.find("div", "infoContainer")
+		attempts += 1
+	if info==None:
+		print('Couldn\'t find',cardname)
+		return 0
 	elems = info.find_all("dd")
-
 	price_format = re.compile('(\\d+),(\\d+) €')
 	price_raw = elems[3].string
 	match = re.match(price_format, price_raw)
